@@ -1,0 +1,50 @@
+services:
+  app:
+    container_name: app
+    build:
+      context: .
+    image: app:SNAPSHOT
+    environment:
+      AWS_ACCESS_KEY_ID: 123
+      AWS_SECRET_ACCESS_KEY: xyz
+      AWS_ENDPOINT: http://localstack:4566
+      DB_HOST: db
+      DB_USER: example
+      DB_PASS: example_pwd
+    restart: on-failure
+    depends_on:
+      - db
+      - localstack
+  db:
+    container_name: db
+    image: db
+    build:
+      context: infra/db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U flyway" ]
+      interval: 3s
+      timeout: 30s
+      retries: 10
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: password
+  localstack:
+      container_name: localstack
+      image: localstack/localstack
+      ports:
+        - '4563-4599:4563-4599'
+      environment:
+        SERVICES: s3,sns,sqs
+        DEBUG: 1
+        DATA_DIR: ${DATA_DIR-}
+        HOST_TMP_FOLDER: ${TMPDIR:-/tmp/}localstack
+        DOCKER_HOST: unix:///var/run/docker.sock
+        SQS_DISABLE_CLOUDWATCH_METRICS: 1
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.128.9.0/24

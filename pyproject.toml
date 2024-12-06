@@ -1,0 +1,22 @@
+[project]
+name = "examplepy"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Mark Blanchard", email = "mark@trility.io"},
+]
+dependencies = ["pytest>=8.3.4", "psycopg2-binary>=2.9.10", "boto3>=1.35.76", "faker>=33.1.0"]
+requires-python = "==3.13.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.scripts]
+start = "python src/main.py"
+setup = "python scripts/aws-setup.py"
+migrate = "python scripts/flyway-migrate.py"
+acceptance = {composite = ["docker compose up -d --build", "setup", "migrate", "pytest"]}
+infra = {composite = ["docker compose up --build -d localstack db", "setup", "migrate"]}
